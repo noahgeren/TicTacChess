@@ -4,7 +4,7 @@ import tensorflow as tf
 from config import REG_CONST, HIDDEN_CNN_LAYERS, LEARNING_RATE, MOMENTUM
 from loss import softmax_cross_entropy_with_logits
 
-class Residual_CNN:
+class ResidualCNN:
 
     def predict(self, input):
         return self.model.predict(input)
@@ -94,7 +94,7 @@ class Residual_CNN:
         self.model = self.__buildModel()
 
     def __buildModel(self):
-        inputLayer = tf.keras.layers.Input(shape = (11, 4, 6), name="input_layer")
+        inputLayer = tf.keras.layers.Input(shape = (11, 6, 4), name="input_layer")
         hiddenLayers = self.__addConvLayer(inputLayer, HIDDEN_CNN_LAYERS[0]["filters"], HIDDEN_CNN_LAYERS[0]["kernel_size"])
         for layerConfig in HIDDEN_CNN_LAYERS[1:]:
             hiddenLayers = self.__addResidualLayer(hiddenLayers, layerConfig["filters"], layerConfig["kernel_size"])

@@ -3,18 +3,27 @@ import numpy as np
 
 class Game:
 
-    defaultGameState = "---------------P-NBRrbnpffw0"
+    defaultGameState = "----------------PNBRrbnpffw0"
 
     def getWinner(self): # 1 for white, -1 for black, 0 for no winner
         for win in constants.wins:
             if("-" in [self.board[i] for i in win]):
-                return 0
+                continue
             winner = constants.pieces[self.board[win[0]]]["color"]
             if([constants.pieces[self.board[i]]["color"] for i in win].count(winner) == 4):
                 return  1 if winner == "white" else -1
         return 0
 
-    def getAvailableMoves(self, pos): # TODO: Update this to do it for every position on the board
+    def getAvailableMoves(self):
+        allowed = []
+        for fromIndex in range(24):
+            if self.board[fromIndex].isupper() == self.whiteTurn:
+                available = self.__getAvailableMovesFromPos(fromIndex)
+                for toIndex in available:
+                    allowed.append(fromIndex * 16 + toIndex)
+        return allowed
+
+    def __getAvailableMovesFromPos(self, pos):
         allowed = []
         if(pos < 0 or pos >= 24): return allowed
         piece = self.board[pos]
@@ -39,9 +48,9 @@ class Game:
             for index in [pos + i for i in directions]:
                 if(0 <= index < 16):
                     to = self.board[index]
-                    if(to == "-" or to.isupper() != piece.isUpper()):
+                    if(to == "-" or to.isupper() != piece.isupper()):
                         allowed.append(index)
-        else: # bishop and rook (since logic is similar)
+        else: # TODO:  THIS IS ALL WRONG
             directions = [[3, 6, 9], [5, 10, 15]] if piece.lower() == "b" else [[4, 8, 12], [1, 2, 3]]
             for mul in range(-1, 2, 2):
                 for direction in directions:
@@ -71,20 +80,22 @@ class Game:
         modelInput = np.append(modelInput, np.ones(24, dtype=np.int) if self.blackForward else np.zeros(24, dtype=np.int))
         # after three moves
         modelInput = np.append(modelInput, np.ones(24, dtype=np.int) if self.afterThreeMoves else np.zeros(24, dtype=np.int))
-        return np.array([np.reshape(modelInput, (11, 4, 6))])
+        return np.array([np.reshape(modelInput, (11, 6, 4))])
     
     # Note: This method does not check if an action is legal
-    def takeAction(self, action): # action is (from, to)
+    def takeAction(self, action): # action is 0-384
+        fromIndex = action // 16
+        toIndex = action % 16
         newBoard = np.array(self.board)
-        to = newBoard[action[1]]
-        piece = newBoard[action[0]]
+        to = newBoard[toIndex]
+        piece = newBoard[fromIndex]
         if(to != "-"): # Replace piece to offboard
             newBoard[16 + list(constants.pieces).index(to)] = to
-        newBoard[action[1]] = piece
-        newBoard[action[0]] = "-"
+        newBoard[toIndex] = piece
+        newBoard[fromIndex] = "-"
         whiteForward = self.whiteForward
         blackForward = self.blackForward
-        if(piece.lower() == "p" and action[1] in [0, 1, 2, 3, 12, 13, 14, 15]):
+        if(piece.lower() == "p" and toIndex in [0, 1, 2, 3, 12, 13, 14, 15]):
             if(piece.isupper()):
                 whiteForward = not whiteForward
             else:
