@@ -42,7 +42,7 @@ class Agent:
         return (action, pi, value, NN_value)
 
     def getPredictions(self, state):
-        inputToModel = state.toModelInput()
+        inputToModel = np.array([state.toModelInput()])
 
         preds = self.model.predict(inputToModel)
         value = preds[0][0]
@@ -99,6 +99,18 @@ class Agent:
         value = values[action]
 
         return action, value
+
+    def replay(self, memory):
+        for _ in range(config.TRAINING_LOOPS):
+            batch = random.sample(memory, min(config.BATCH_SIZE, len(memory)))
+            inputs = np.array([row["game"].toModelInput() for row in batch])
+            targets = {
+                "value_head": np.array([row["value"] for row in batch]),
+                "policy_head": np.array([row["AV"] for row in batch])
+            }
+            fit = self.model.model.fit(inputs, targets, epochs=config.EPOCHS, verbose=1, validation_split=0, batch_size=32)
+            print("New Loss:")
+            print(fit.history)
 
     def buildMCTS(self, state):
         self.root = Node(state)

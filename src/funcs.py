@@ -7,7 +7,7 @@ from agent import Agent
 
 import config
 
-def playMatches(player1, player2, episodes, turnsUntilTau0, goesFirst = 0):
+def playMatches(player1, player2, episodes, turnsUntilTau0, memory = None, goesFirst = 0):
     game = Game()
     scores = {
         "player1": 0,
@@ -15,7 +15,8 @@ def playMatches(player1, player2, episodes, turnsUntilTau0, goesFirst = 0):
         "stalemate": 0
     }
 
-    for _ in range(episodes):
+    for e in range(episodes):
+        print(f'Episode: {e}')
         game.reset()
 
         player1Starts = goesFirst
@@ -47,15 +48,22 @@ def playMatches(player1, player2, episodes, turnsUntilTau0, goesFirst = 0):
         turn = 0
         while winner == 0:
             turn += 1
-            action, _, _, _ = players[1 if game.whiteTurn else -1]["agent"].act(game, 1 if turn < turnsUntilTau0 else 0)
+            print(f'Turn: {turn}')
+            print(np.reshape(game.board, (6, 4)))
+            action, pi, _, _ = players[1 if game.whiteTurn else -1]["agent"].act(game, 1 if turn < turnsUntilTau0 else 0)
 
             game = game.takeAction(action)
 
-            print(np.reshape(game.board, (6, 4)))
-
+            if(memory != None):
+                memory.commitShortTerm(game, pi)
+            
             winner = game.getWinner()
             if winner != 0:
-                if winner == 1:
+                if(memory != None):
+                    for move in memory.shortTerm:
+                        move["value"] = winner if move["game"].whiteTurn == game.whiteTurn else -winner
+                    memory.commitLongTerm()
+                if(winner == 1):
                     scores[players[1 if game.whiteTurn else -1]["name"]] += 1
                 else:
                     scores[players[-1 if game.whiteTurn else 1]["name"]] += 1

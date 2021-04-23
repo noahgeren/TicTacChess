@@ -33,9 +33,9 @@ class MCTS:
         breadcrumbs = []
         currentNode = self.root
         value = 0
-        
+        depth = 0
         while not currentNode.isLeaf():
-            maxQU = -99999
+            maxQU = -999999999
             if currentNode == self.root:
                 epsilon = config.EPSILON
                 nu = np.random.dirichlet([config.ALPHA] * len(currentNode.edges))
@@ -54,6 +54,8 @@ class MCTS:
             value = currentNode.state.takeAction(simulationEdge.action).getWinner()
             currentNode = simulationEdge.outNode
             breadcrumbs.append(simulationEdge)
+            depth += 1
+            if(depth > 100): break
         return (currentNode, value, breadcrumbs)
 
     def backFill(self, leaf, value, breadcrumbs):

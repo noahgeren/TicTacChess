@@ -14,54 +14,13 @@ class Game:
                 return  1 if winner == "white" else -1
         return 0
 
-    def getAvailableMoves(self):
+    def getAvailableMoves(self): # TODO: Add afterThreeMoves logic
         allowed = []
         for fromIndex in range(24):
             if self.board[fromIndex].isupper() == self.whiteTurn:
                 available = self.__getAvailableMovesFromPos(fromIndex)
                 for toIndex in available:
                     allowed.append(fromIndex * 16 + toIndex)
-        return allowed
-
-    def __getAvailableMovesFromPos(self, pos):
-        allowed = []
-        if(pos < 0 or pos >= 24): return allowed
-        piece = self.board[pos]
-        if(piece == "-"): return allowed
-        if(16 <= pos < 24):
-            for index in range(16):
-                if(self.board[index] == "-"):
-                    allowed.append(index)
-        elif(piece.lower() == "p"): # pawn
-            if(piece.isupper()):
-                direction = -1 if self.whiteForward else 1
-            else:
-                direction = 1 if self.blackForward else -1
-            index = pos + direction * 4
-            if(0 <=  index < 16 and self.board[index] == "-"):
-                allowed.append(index)
-            for index in [pos + direction * i for i in range(3, 6, 2)]:
-                if(0 <= index < 16 and self.board[index] != "-" and self.board[index].isupper() != piece.isupper()):
-                    allowed.append(index)
-        elif(piece.lower() == "n"): # knight
-            directions = [-2, -6, -7, -9, 2, 6, 7, 9]
-            for index in [pos + i for i in directions]:
-                if(0 <= index < 16):
-                    to = self.board[index]
-                    if(to == "-" or to.isupper() != piece.isupper()):
-                        allowed.append(index)
-        else: # TODO:  THIS IS ALL WRONG
-            directions = [[3, 6, 9], [5, 10, 15]] if piece.lower() == "b" else [[4, 8, 12], [1, 2, 3]]
-            for mul in range(-1, 2, 2):
-                for direction in directions:
-                    for index in [pos + mul * i for i in direction]:
-                        if(0 <= index < 16):
-                            if(self.board[index] == "-"):
-                                allowed.append(index)
-                            else:
-                                if(self.board[index].isupper() != piece.isupper()):
-                                    allowed.append(index)
-                                break
         return allowed
 
     def toString(self):
@@ -80,7 +39,7 @@ class Game:
         modelInput = np.append(modelInput, np.ones(24, dtype=np.int) if self.blackForward else np.zeros(24, dtype=np.int))
         # after three moves
         modelInput = np.append(modelInput, np.ones(24, dtype=np.int) if self.afterThreeMoves else np.zeros(24, dtype=np.int))
-        return np.array([np.reshape(modelInput, (11, 6, 4))])
+        return np.reshape(modelInput, (11, 6, 4))
     
     # Note: This method does not check if an action is legal
     def takeAction(self, action): # action is 0-384
@@ -106,7 +65,11 @@ class Game:
         return Game(Game.stateToString(newBoard, whiteForward, blackForward, not self.whiteTurn, afterThreeMoves))
 
     def reset(self):
-        self.__loadState(self.defaultGameState)        
+        self.__loadState(self.defaultGameState)
+
+    def identities(self, actionValues):
+        # TODO: Mirror over x (switch pawn direction) and y axis
+        return [(self, actionValues)]    
 
     def __init__(self, boardState = defaultGameState):
         self.__loadState(boardState)
@@ -117,6 +80,62 @@ class Game:
         self.blackForward = boardState[25].lower() == "f"
         self.whiteTurn = boardState[26].lower() == "w"
         self.afterThreeMoves = boardState[27] == "1"
+    
+    def __getAvailableMovesFromPos(self, pos):
+        allowed = []
+        if(pos < 0 or pos >= 24): return allowed
+        piece = self.board[pos]
+        if(piece == "-"): return allowed
+        if(16 <= pos < 24):
+            for index in range(16):
+                if(self.board[index] == "-"):
+                    allowed.append(index)
+        elif(piece.lower() == "p"):
+            if(piece.isupper()):
+                direction = -1 if self.whiteForward else 1
+            else:
+                direction = 1 if self.blackForward else -1
+            index = pos + direction * 4
+            if(0 <=  index < 16 and self.board[index] == "-"):
+                allowed.append(index)
+            for index in [pos + direction * i for i in range(3, 6, 2)]:
+                    if(0 <= index < 16 and 
+                    abs((pos % 4) - (index % 4)) == 1 and 
+                    (self.board[index] != "-" and 
+                    self.board[index].isupper() != piece.isupper())):
+                        allowed.append(index)
+        elif(piece.lower() == "n"):
+            directions = []
+            col = pos % 4
+            if(col < 2):
+                directions += [-2, 6]
+            else:
+                directions += [2, -6]
+            if(col > 0):
+                directions += [7, -9]
+            if(col < 3):
+                directions += [-7, 9]
+            for index in [pos + i for i in directions]:
+                if(0 <= index < 16):
+                    to = self.board[index]
+                    if(to == "-" or to.isupper() != piece.isupper()):
+                        allowed.append(index)
+        elif(piece.lower() == "b" or piece.lower() == "r"):
+            directions = [[3, 6, 9], [5, 10, 15]] if piece.lower() == "b" else [[4, 8, 12], [1, 2, 3]]
+            for mul in range(-1, 2, 2):
+                for direction in directions:
+                    lastCol = pos % 4
+                    for index in [pos + mul * i for i in direction]:
+                        if(0 <= index < 16 and abs(lastCol - (index % 4)) == 1):
+                            lastCol = index % 4
+                            if(self.board[index] == "-"):
+                                allowed.append(index)
+                            else:
+                                if(self.board[index].isupper() != piece.isupper()):
+                                    allowed.append(index)
+                                break
+                        else: break
+        return allowed
 
     @staticmethod
     def stateToString(board, whiteForward, blackForward, whiteTurn, afterThreeMoves):

@@ -84,7 +84,7 @@ class ResidualCNN:
         layers = tf.keras.layers.Dense(
             384,
             use_bias=False,
-            activation="linear",
+            activation="softmax",
             kernel_regularizer=tf.keras.regularizers.l2(REG_CONST),
             name="policy_head"
         )(layers)
@@ -106,7 +106,7 @@ class ResidualCNN:
             optimizer=tf.keras.optimizers.SGD(LEARNING_RATE, MOMENTUM),
             loss={
                 "value_head": "mean_squared_error",
-                "policy_head": softmax_cross_entropy_with_logits
+                "policy_head": "categorical_crossentropy"
             }
         )
         return model
