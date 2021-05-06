@@ -18,10 +18,9 @@ class ResidualCNN:
         layers = tf.keras.layers.Conv2D(
             filters, 
             kernelSize, 
-            data_format="channels_first",
             padding="same",
             use_bias=False,
-            activation="linear",
+            activation="relu",
             kernel_regularizer=tf.keras.regularizers.l2(REG_CONST)
         )(layers)
         layers = tf.keras.layers.BatchNormalization(axis=1)(layers)
@@ -33,10 +32,9 @@ class ResidualCNN:
         x = tf.keras.layers.Conv2D(
             filters,
             kernelSize,
-            data_format="channels_first",
             padding="same",
             use_bias=False,
-            activation="linear",
+            activation="relu",
             kernel_regularizer=tf.keras.regularizers.l2(REG_CONST)
         )(x)
         x = tf.keras.layers.BatchNormalization(axis=1)(x)
@@ -48,10 +46,9 @@ class ResidualCNN:
         layers = tf.keras.layers.Conv2D(
             filters=1,
             kernel_size=(1,1),
-            data_format="channels_first",
             padding="same",
             use_bias=False,
-            activation="linear",
+            activation="relu",
             kernel_regularizer=tf.keras.regularizers.l2(REG_CONST)
         )(layers)
         layers = tf.keras.layers.BatchNormalization(axis=1)(layers)
@@ -60,7 +57,7 @@ class ResidualCNN:
         layers = tf.keras.layers.Dense(
             20,
             use_bias=False,
-            activation="linear",
+            activation="relu",
             kernel_regularizer=tf.keras.regularizers.l2(REG_CONST)
         )(layers)
         layers = tf.keras.layers.LeakyReLU()(layers)
@@ -77,10 +74,9 @@ class ResidualCNN:
         layers = tf.keras.layers.Conv2D(
             filters=2,
             kernel_size=(1,1),
-            data_format="channels_first",
             padding="same",
             use_bias=False,
-            activation="linear",
+            activation="relu",
             kernel_regularizer=tf.keras.regularizers.l2(REG_CONST)
         )(layers)
         layers = tf.keras.layers.BatchNormalization(axis=1)(layers)
@@ -99,7 +95,7 @@ class ResidualCNN:
         self.model = self.__buildModel()
 
     def __buildModel(self):
-        inputLayer = tf.keras.layers.Input(shape = (11, 6, 4), name="input_layer")
+        inputLayer = tf.keras.layers.Input(shape = (6, 4, 11), name="input_layer")
         hiddenLayers = self.__addConvLayer(inputLayer, HIDDEN_CNN_LAYERS[0]["filters"], HIDDEN_CNN_LAYERS[0]["kernel_size"])
         for layerConfig in HIDDEN_CNN_LAYERS[1:]:
             hiddenLayers = self.__addResidualLayer(hiddenLayers, layerConfig["filters"], layerConfig["kernel_size"])
@@ -108,7 +104,7 @@ class ResidualCNN:
 
         model = tf.keras.models.Model(inputs=[inputLayer], outputs=[valueHead, policyHead])
         model.compile(
-            optimizer=tf.keras.optimizers.SGD(LEARNING_RATE, MOMENTUM),
+            optimizer="adam",
             loss={
                 "value_head": "mean_squared_error",
                 "policy_head": "categorical_crossentropy"

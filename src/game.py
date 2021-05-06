@@ -45,7 +45,7 @@ class Game:
             modelInput = np.append(modelInput, whiteForward)
         # after three moves
         modelInput = np.append(modelInput, np.ones(24, dtype=np.int) if self.afterThreeMoves else np.zeros(24, dtype=np.int))
-        return np.reshape(modelInput, (11, 6, 4))
+        return np.moveaxis(np.reshape(modelInput, (11, 6, 4)), 0, -1)
     
     # Note: This method does not check if an action is legal
     def takeAction(self, action): # action is 0-384
