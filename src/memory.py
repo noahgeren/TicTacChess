@@ -9,16 +9,12 @@ class Memory:
         self.shortTerm = deque(maxlen=config.MEMORY_SIZE)
 
     def commitShortTerm(self, game, actionValues):
-        for i in game.identities(actionValues):
-            self.shortTerm.append({
-                "game": i[0],
-                "AV": i[1]
-            })
+        self.shortTerm.append({
+            "game": game,
+            "AV": actionValues
+        })
     
     def commitLongTerm(self):
         for i in self.shortTerm:
             self.longTerm.append(i)
-        self.clearShortTerm()
-
-    def clearShortTerm(self):
         self.shortTerm = deque(maxlen=config.MEMORY_SIZE)

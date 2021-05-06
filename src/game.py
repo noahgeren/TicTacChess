@@ -14,9 +14,10 @@ class Game:
                 return  1 if winner == "white" else -1
         return 0
 
-    def getAvailableMoves(self): # TODO: Add afterThreeMoves logic
+    def getAvailableMoves(self):
         allowed = []
-        for fromIndex in range(24):
+        startIndex = 0 if self.afterThreeMoves else 16
+        for fromIndex in range(startIndex, 24):
             if self.board[fromIndex].isupper() == self.whiteTurn:
                 available = self.__getAvailableMovesFromPos(fromIndex)
                 for toIndex in available:
@@ -31,12 +32,17 @@ class Game:
         # piece planes
         for piece in constants.pieces:
             plane = np.zeros(24, dtype=np.int)
-            plane[self.board==piece] = 1
+            plane[self.board==(piece if self.whiteTurn else piece.swapcase())] = 1
             modelInput = np.append(modelInput, plane)
-        # white pawn direction
-        modelInput = np.append(modelInput, np.ones(24, dtype=np.int) if self.whiteForward else np.zeros(24, dtype=np.int))
-        # black pawn direction
-        modelInput = np.append(modelInput, np.ones(24, dtype=np.int) if self.blackForward else np.zeros(24, dtype=np.int))
+        # pawn directions
+        whiteForward = np.ones(24, dtype=np.int) if self.whiteForward else np.zeros(24, dtype=np.int)
+        blackForward = np.ones(24, dtype=np.int) if self.blackForward else np.zeros(24, dtype=np.int)
+        if(self.whiteTurn):
+            modelInput = np.append(modelInput, whiteForward)
+            modelInput = np.append(modelInput, blackForward)
+        else:
+            modelInput = np.append(modelInput, blackForward)
+            modelInput = np.append(modelInput, whiteForward)
         # after three moves
         modelInput = np.append(modelInput, np.ones(24, dtype=np.int) if self.afterThreeMoves else np.zeros(24, dtype=np.int))
         return np.reshape(modelInput, (11, 6, 4))
@@ -66,10 +72,6 @@ class Game:
 
     def reset(self):
         self.__loadState(self.defaultGameState)
-
-    def identities(self, actionValues):
-        # TODO: Mirror over x (switch pawn direction) and y axis
-        return [(self, actionValues)]    
 
     def __init__(self, boardState = defaultGameState):
         self.__loadState(boardState)

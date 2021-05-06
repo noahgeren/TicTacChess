@@ -2,12 +2,17 @@ import numpy as np
 import tensorflow as tf
 
 from config import REG_CONST, HIDDEN_CNN_LAYERS, LEARNING_RATE, MOMENTUM
-from loss import softmax_cross_entropy_with_logits
 
 class ResidualCNN:
 
     def predict(self, input):
         return self.model.predict(input)
+
+    def read(self, path):
+        self.model.set_weights(tf.keras.models.load_model(path).get_weights())
+
+    def write(self, path):
+        self.model.save(path)
 
     def __addConvLayer(self, layers, filters, kernelSize):
         layers = tf.keras.layers.Conv2D(

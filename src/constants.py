@@ -15,20 +15,20 @@ pieces = {
         "type": "rook",
         "color": "white"
     },
-    "p": {
-        "type": "pawn",
-        "color": "black"
-    },
-    "n": {
-        "type": "knight",
+    "r": {
+        "type": "rook",
         "color": "black"
     },
     "b": {
         "type": "bishop",
         "color": "black"
     },
-    "r": {
-        "type": "rook",
+    "n": {
+        "type": "knight",
+        "color": "black"
+    },
+    "p": {
+        "type": "pawn",
         "color": "black"
     }
 }

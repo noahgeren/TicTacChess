@@ -46,12 +46,13 @@ class MCTS:
             for edge in currentNode.edges:
                 Nb += edge.stats["N"]
             for idx, edge in enumerate(currentNode.edges):
+                if(edge in breadcrumbs): continue
                 U = config.CPUCT * ((1-epsilon) * edge.stats["P"] + epsilon * nu[idx]) * np.sqrt(Nb) / (1 + edge.stats["N"])
                 Q = edge.stats["Q"]
                 if Q + U > maxQU:
                     maxQU = Q + U
                     simulationEdge = edge
-            value = currentNode.state.takeAction(simulationEdge.action).getWinner()
+            value = (1 if currentNode.state.whiteTurn else -1) * currentNode.state.takeAction(simulationEdge.action).getWinner()
             currentNode = simulationEdge.outNode
             breadcrumbs.append(simulationEdge)
             depth += 1
@@ -62,7 +63,7 @@ class MCTS:
         currentPlayer = leaf.state.whiteTurn
         for edge in breadcrumbs:
             playerTurn = edge.inNode.state.whiteTurn
-            direction = 1 if playerTurn == currentPlayer else -1
+            direction = 1 if playerTurn != currentPlayer else -1
             edge.stats["N"] += 1
             edge.stats["W"] += value * direction
             edge.stats["Q"] = edge.stats["W"] / edge.stats["N"]
