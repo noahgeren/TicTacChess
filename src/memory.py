@@ -17,4 +17,7 @@ class Memory:
     def commitLongTerm(self):
         for i in self.shortTerm:
             self.longTerm.append(i)
+        self.clearShortTerm()
+        
+    def clearShortTerm(self):
         self.shortTerm = deque(maxlen=config.MEMORY_SIZE)

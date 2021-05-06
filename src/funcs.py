@@ -50,5 +50,6 @@ def playMatches(player1, player2, episodes, turnsUntilTau0, memory = None):
                 print(scores)
             elif turn > 200:
                 print("Past 200 turns. No winner.")
+                memory.clearShortTerm()
                 break
     return scores
